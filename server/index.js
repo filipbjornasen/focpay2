@@ -5,6 +5,7 @@ const crypto = require("crypto");
 const fs = require("fs");
 const https = require("https");
 const axios = require("axios");
+const { paymentDb } = require("./database");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -15,8 +16,8 @@ app.use(cors());
 app.use(express.json());
 
 
-// In-memory storage for payment requests (use database in production)
-const paymentRequests = new Map();
+// Database storage for payment requests
+// const paymentRequests = new Map(); // Replaced with Azure Table Storage
 // Swish M-ecommerce configuration (set these via environment variables)
 const SWISH_CONFIG = {
   baseUrl: 'https://mss.cpc.getswish.net/swish-cpcapi/api/v2',
@@ -38,6 +39,15 @@ const swishClient = axios.create({
     httpsAgent: agent
 });
 
+// Helper function for error responses
+function sendErrorResponse(res, statusCode, error, details) {
+  return res.status(statusCode).json({
+    error: error,
+    details: details,
+    timestamp: new Date().toISOString()
+  });
+}
+
 // Add request/response interceptors for debugging
 swishClient.interceptors.request.use(
   (config) => {
@@ -50,7 +60,7 @@ swishClient.interceptors.request.use(
   }
 );
 
-swishApiClient.interceptors.response.use(
+swishClient.interceptors.response.use(
   (response) => {
     console.log(`Swish API response: ${response.status} ${response.statusText}`);
     return response;
@@ -66,12 +76,11 @@ swishApiClient.interceptors.response.use(
 );
 
 // Swish API helper functions
-async function createSwishPaymentRequest(payeeAlias) {
-  const instructionId = crypto.randomUUID();
+async function createSwishPaymentRequest() {
+  const instructionId = crypto.randomUUID().replace(/-/g, '').toUpperCase();
   const data = {
-    payeePaymentReference: paymentData.payeePaymentReference,
-    callbackUrl: `https://localhost:5000/api/swish/callback`, 
-    payerAlias: SWISH_CONFIG.alias,
+    callbackUrl: `https://google.com`,
+    payeeAlias: SWISH_CONFIG.alias,
     amount: '10',
     currency: 'SEK',
     message: 'GET HIPPER WITH FLIPPER!',
@@ -89,26 +98,28 @@ async function createSwishPaymentRequest(payeeAlias) {
   }
 }
 
-// Create Swish payment request
-app.post("/api/swish/payment-request", async (req, res) => {
+// Dricko-specific endpoint that client is calling
+app.post("/api/swish-dricko", async (req, res) => {
   try {
-    const swishResponse = await createSwishPaymentRequest(swishPaymentData);
+    const swishResponse = await createSwishPaymentRequest();
 
-      const paymentRequest = {
+      const paymentData = {
         id: swishResponse.id,
         token: swishResponse.token,
-        dateCreated: new Date().toISOString(),
-        status: 'CREATED',
         amount: 10,
         currency: 'SEK',
+        message: 'GET HIPPER WITH FLIPPER!',
+        payeeAlias: SWISH_CONFIG.alias,
+        callbackUrl: `https://localhost:5000/receipt?token=${swishResponse.id}`
       };
 
-      // Store payment request (use database in production)
-      paymentRequests.set(paymentRequest.id, paymentRequest);
-
+      // Store payment request in Azure Table Storage
+      const paymentRequest = await paymentDb.createPayment(paymentData);
+      console.log(swishResponse);
       // Return standardized response
       const userCallbackUrl = 'https://localhost:5000/receipt?token=' + paymentRequest.id;
-      const redirectUrl = `swish://paymentrequest?token=${paymentRequest.token}&callbackurl=${userCallbackUrl}`;
+      const redirectUrl = `swish://paymentrequest?token=${paymentRequest.token}&callbackurl=merchant%253A%252F%252F`;//http://192.168.0.5:5000/receipt`;
+      console.log(redirectUrl)
       const responseData = {
         token: paymentRequest.token,
         callbackUrl: userCallbackUrl,
@@ -140,39 +151,118 @@ app.post("/api/swish/callback", async (req, res) => {
       return sendErrorResponse(res, 400, "Invalid callback data", "Payment ID is required in callback");
     }
 
-    const paymentRequest = paymentRequests.get(callbackData.id);
+    const existingPayment = await paymentDb.getPayment(callbackData.id);
 
-    if (!paymentRequest) {
+    if (!existingPayment) {
       console.warn(`Received callback for unknown payment ID: ${callbackData.id}`);
       return sendErrorResponse(res, 404, "Payment not found", `Payment with ID ${callbackData.id} does not exist`);
     }
 
-    const previousStatus = paymentRequest.status;
-    paymentRequest.status = callbackData.status || paymentRequest.status;
-    paymentRequest.dateUpdated = new Date().toISOString();
-    paymentRequest.payerAlias = callbackData.payerAlias;
+    const previousStatus = existingPayment.status;
 
-    // Add additional fields based on callback data
-    if (callbackData.datePaid) {
-      paymentRequest.datePaid = callbackData.datePaid;
-    }
+    // Prepare additional data for update
+    const additionalData = {};
+    if (callbackData.payerAlias) additionalData.payerAlias = callbackData.payerAlias;
+    if (callbackData.datePaid) additionalData.datePaid = callbackData.datePaid;
     if (callbackData.errorCode) {
-      paymentRequest.errorCode = callbackData.errorCode;
-      paymentRequest.errorMessage = callbackData.errorMessage;
+      additionalData.errorCode = callbackData.errorCode;
+      additionalData.errorMessage = callbackData.errorMessage;
     }
+
+    // Update payment status in database
+    const updatedPayment = await paymentDb.updatePaymentStatus(
+      callbackData.id,
+      callbackData.status || existingPayment.status,
+      additionalData
+    );
 
     // Log status change
-    console.log(`Payment ${callbackData.id} status changed from ${previousStatus} to ${paymentRequest.status}`);
+    console.log(`Payment ${callbackData.id} status changed from ${previousStatus} to ${updatedPayment.status}`);
 
     res.status(200).json({
       message: "Callback processed successfully",
       paymentId: callbackData.id,
-      status: paymentRequest.status
+      status: updatedPayment.status
     });
 
   } catch (error) {
     console.error("Error processing webhook:", error);
-    return sendErrorResponse(res, 500, "Internal server error", "Failed to process webhook");
+    return sendErrorResponse(res, 500, "Internal server error", error.message);
+  }
+});
+
+// Get oldest paid payment
+app.get("/api/payments/oldest-paid", async (req, res) => {
+  try {
+    const oldestPaidPayment = await paymentDb.getOldestPaidPayment();
+
+    if (!oldestPaidPayment) {
+      return res.status(404).json({
+        message: "No paid payments found",
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    res.status(200).json({
+      payment: {
+        id: oldestPaidPayment.id,
+        status: oldestPaidPayment.status,
+        amount: oldestPaidPayment.amount,
+        currency: oldestPaidPayment.currency,
+        dateCreated: oldestPaidPayment.dateCreated,
+        datePaid: oldestPaidPayment.datePaid,
+        payerAlias: oldestPaidPayment.payerAlias,
+        payeeAlias: oldestPaidPayment.payeeAlias
+      },
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error("Error getting oldest paid payment:", error);
+    return sendErrorResponse(res, 500, "Internal server error", error.message);
+  }
+});
+
+// Change payment status to credited
+app.patch("/api/payments/:paymentId/credit", async (req, res) => {
+  try {
+    const { paymentId } = req.params;
+
+    if (!paymentId) {
+      return sendErrorResponse(res, 400, "Bad request", "Payment ID is required");
+    }
+
+    // Check if payment exists and is in PAID status
+    const existingPayment = await paymentDb.getPayment(paymentId);
+
+    if (!existingPayment) {
+      return sendErrorResponse(res, 404, "Payment not found", `Payment with ID ${paymentId} does not exist`);
+    }
+
+    if (existingPayment.status !== 'PAID') {
+      return sendErrorResponse(res, 400, "Invalid operation", `Payment must be in PAID status to be credited. Current status: ${existingPayment.status}`);
+    }
+
+    // Update status to CREDITED
+    const updatedPayment = await paymentDb.updatePaymentStatus(paymentId, 'CREDITED');
+
+    console.log(`Payment ${paymentId} status changed from ${existingPayment.status} to CREDITED`);
+
+    res.status(200).json({
+      message: "Payment successfully credited",
+      payment: {
+        id: updatedPayment.id,
+        status: updatedPayment.status,
+        amount: updatedPayment.amount,
+        currency: updatedPayment.currency,
+        dateCreated: updatedPayment.dateCreated,
+        dateUpdated: updatedPayment.dateUpdated,
+        datePaid: updatedPayment.datePaid
+      },
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error("Error crediting payment:", error);
+    return sendErrorResponse(res, 500, "Internal server error", error.message);
   }
 });
 
@@ -184,5 +274,6 @@ app.listen(PORT, () => {
 app.use(express.static(path.join(__dirname, "../client/build")));
 
 app.get("/*", (req, res) => {
+  console.log('test');
   res.sendFile(path.join(__dirname, "../client/build/index.html"));
 });
