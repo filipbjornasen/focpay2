@@ -2,7 +2,7 @@ const { TableClient } = require("@azure/data-tables");
 
 class PaymentDatabase {
     constructor() {
-        this.connectionString = process.env.AZURE_STORAGE_CONNECTION_STRING;
+        this.connectionString = process.env.TABLE_STORAGE_CONNECTION_STRING;
         this.tableName = "payments";
         this.tableClient = null;
         this.initialized = false;
@@ -12,7 +12,7 @@ class PaymentDatabase {
         if (this.initialized) return;
 
         if (!this.connectionString) {
-            throw new Error("AZURE_STORAGE_CONNECTION_STRING environment variable is required");
+            throw new Error("TABLE_STORAGE_CONNECTION_STRING environment variable is required");
         }
 
         this.tableClient = TableClient.fromConnectionString(this.connectionString, this.tableName);
@@ -44,7 +44,6 @@ class PaymentDatabase {
             dateUpdated: new Date().toISOString(),
             payerAlias: paymentData.payerAlias || "",
             payeeAlias: paymentData.payeeAlias || "",
-            callbackUrl: paymentData.callbackUrl || "",
             errorCode: paymentData.errorCode || "",
             errorMessage: paymentData.errorMessage || "",
             datePaid: paymentData.datePaid || ""

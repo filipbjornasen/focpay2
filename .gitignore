@@ -1,3 +1,7 @@
 .claude
 certs/prod
 node_modules
+build
+deploy
+deploy.zip
+.env

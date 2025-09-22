@@ -15,7 +15,7 @@ const certDir = path.join(__dirname, "certs", ENV === "production" ? "prod" : "t
 app.use(cors());
 app.use(express.json());
 
-
+console.log(process.env.TABLE_STORAGE_CONNECTION_STRING);
 // Database storage for payment requests
 // const paymentRequests = new Map(); // Replaced with Azure Table Storage
 // Swish M-ecommerce configuration (set these via environment variables)
@@ -271,9 +271,9 @@ app.listen(PORT, () => {
 });
 
 
-app.use(express.static(path.join(__dirname, "../client/build")));
+app.use(express.static(path.join(__dirname, "build")));
 
 app.get("/*", (req, res) => {
   console.log('test');
-  res.sendFile(path.join(__dirname, "../client/build/index.html"));
+  res.sendFile(path.join(__dirname, "build/index.html"));
 });
