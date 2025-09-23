@@ -9,25 +9,31 @@ const { paymentDb } = require("./database");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-const ENV = process.env.NODE_ENV || "development";
+const ENV = (process.env.NODE_ENV || "development").toLowerCase();
 const certDir = path.join(__dirname, "certs", ENV === "production" ? "prod" : "test");
+
+console.log("Using environment:", ENV);
+console.log("Using certificate directory:", certDir);
 
 app.use(cors());
 app.use(express.json());
 
-console.log(process.env.TABLE_STORAGE_CONNECTION_STRING);
-// Database storage for payment requests
-// const paymentRequests = new Map(); // Replaced with Azure Table Storage
-// Swish M-ecommerce configuration (set these via environment variables)
 const SWISH_CONFIG = {
-  baseUrl: 'https://mss.cpc.getswish.net/swish-cpcapi/api/v2',
+  baseUrl: process.env.SWISH_BASE_URL,
   certPath: certDir + '/swish.pem',
   keyPath: certDir + '/swish.key',
   caPath: certDir + '/root-swish.pem',
-  passphrase: process.env.SWISH_PASSPHRASE || 'swish',
-  alias: process.env.SWISH_ALIAS || '1234679304',
-  environment: process.env.SWISH_ENV || 'test' // 'test' or 'production'
+  alias: process.env.SWISH_ALIAS,
+  callbackUrl: process.env.SWISH_CALLBACK_URL,
+  userCallbackUrl: process.env.USER_CALLBACK_URL
 };
+
+console.log(SWISH_CONFIG);
+
+if (!SWISH_CONFIG.baseUrl || !SWISH_CONFIG.certPath || !SWISH_CONFIG.keyPath || !SWISH_CONFIG.caPath || !SWISH_CONFIG.alias || !SWISH_CONFIG.callbackUrl) {
+    console.error("Missing required Swish configuration in environment variables");
+    process.exit(1);
+}
 
 const agent = new https.Agent({
     cert: fs.readFileSync(SWISH_CONFIG.certPath, {encoding: 'utf8'}),
@@ -79,7 +85,7 @@ swishClient.interceptors.response.use(
 async function createSwishPaymentRequest() {
   const instructionId = crypto.randomUUID().replace(/-/g, '').toUpperCase();
   const data = {
-    callbackUrl: `https://google.com`,
+    callbackUrl: SWISH_CONFIG.callbackUrl,
     payeeAlias: SWISH_CONFIG.alias,
     amount: '10',
     currency: 'SEK',
@@ -110,15 +116,15 @@ app.post("/api/swish-dricko", async (req, res) => {
         currency: 'SEK',
         message: 'GET HIPPER WITH FLIPPER!',
         payeeAlias: SWISH_CONFIG.alias,
-        callbackUrl: `https://localhost:5000/receipt?token=${swishResponse.id}`
+        callbackUrl: SWISH_CONFIG.callbackUrl + '?token=' + swishResponse.id
       };
 
       // Store payment request in Azure Table Storage
       const paymentRequest = await paymentDb.createPayment(paymentData);
       console.log(swishResponse);
       // Return standardized response
-      const userCallbackUrl = 'https://localhost:5000/receipt?token=' + paymentRequest.id;
-      const redirectUrl = `swish://paymentrequest?token=${paymentRequest.token}&callbackurl=merchant%253A%252F%252F`;//http://192.168.0.5:5000/receipt`;
+      const userCallbackUrl =  SWISH_CONFIG.userCallbackUrl + '?token=' + paymentRequest.id;
+      const redirectUrl = `swish://paymentrequest?token=${paymentRequest.token}&callbackurl=${encodeURIComponent(userCallbackUrl)}`;
       console.log(redirectUrl)
       const responseData = {
         token: paymentRequest.token,
@@ -274,6 +280,5 @@ app.listen(PORT, () => {
 app.use(express.static(path.join(__dirname, "build")));
 
 app.get("/*", (req, res) => {
-  console.log('test');
   res.sendFile(path.join(__dirname, "build/index.html"));
 });

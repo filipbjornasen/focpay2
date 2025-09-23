@@ -1,5 +1,5 @@
 .claude
-certs/prod
+server/certs/prod/
 node_modules
 build
 deploy
