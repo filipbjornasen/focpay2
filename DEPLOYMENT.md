@@ -1,3 +1,4 @@
+# Login with azure cli tool and place navigate to focpay2 folder
 cd client
 npm install
 npm run build
