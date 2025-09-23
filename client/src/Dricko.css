@@ -1,0 +1,238 @@
+.dricko-layout {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #1e3c72 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.dricko-layout::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image:
+    radial-gradient(circle at 20% 80%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+.dricko-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  position: relative;
+  z-index: 1;
+}
+
+.pirate-container {
+  text-align: center;
+  max-width: 600px;
+  width: 100%;
+}
+
+.treasure-chest {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 20px;
+  padding: 3rem 2rem;
+  box-shadow:
+    0 20px 40px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  border: 3px solid #d4af37;
+  position: relative;
+  backdrop-filter: blur(10px);
+}
+
+.treasure-chest::before {
+  content: '';
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80px;
+  height: 20px;
+  background: #8b4513;
+  border-radius: 10px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.pirate-title {
+  color: #2c3e50 !important;
+  margin-bottom: 1rem !important;
+  font-weight: bold;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+  font-size: 2.5rem !important;
+}
+
+.pirate-subtitle {
+  color: #5d6d7e;
+  font-size: 1.2rem;
+  margin-bottom: 2rem;
+  display: block;
+  font-style: italic;
+}
+
+.payment-section {
+  margin: 2.5rem 0;
+  display: flex;
+  justify-content: center;
+}
+
+.swish-button {
+  background: linear-gradient(135deg, #00d4aa 0%, #00b894 50%, #00a085 100%) !important;
+  border: none !important;
+  height: 60px !important;
+  font-size: 1.3rem !important;
+  font-weight: bold !important;
+  border-radius: 15px !important;
+  box-shadow:
+    0 8px 16px rgba(0, 180, 148, 0.3),
+    0 4px 8px rgba(0, 0, 0, 0.1) !important;
+  transition: all 0.3s ease !important;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  width: 320px;
+  max-width: 90%;
+  padding: 0 2rem !important;
+}
+
+.swish-button:hover {
+  transform: translateY(-2px) !important;
+  box-shadow:
+    0 12px 24px rgba(0, 180, 148, 0.4),
+    0 6px 12px rgba(0, 0, 0, 0.15) !important;
+  background: linear-gradient(135deg, #00e6c3 0%, #00d4aa 50%, #00b894 100%) !important;
+}
+
+.swish-button:active {
+  transform: translateY(0) !important;
+  box-shadow:
+    0 4px 8px rgba(0, 180, 148, 0.3),
+    0 2px 4px rgba(0, 0, 0, 0.1) !important;
+}
+
+.swish-button {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.swish-icon-left {
+  margin-bottom: 3px;
+  font-size: 1.1em;
+}
+
+.swish-icon-right {
+  margin-bottom: 3px;
+  font-size: 1.1em;
+}
+
+.pirate-decorations {
+  margin-top: 2rem;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+}
+
+.decoration {
+  font-size: 2rem;
+  opacity: 0.7;
+  animation: float 3s ease-in-out infinite;
+}
+
+.decoration:nth-child(1) { animation-delay: 0s; }
+.decoration:nth-child(2) { animation-delay: 0.5s; }
+.decoration:nth-child(3) { animation-delay: 1s; }
+.decoration:nth-child(4) { animation-delay: 1.5s; }
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .treasure-chest {
+    padding: 2rem 1.5rem;
+    margin: 1rem;
+  }
+
+  .pirate-title {
+    font-size: 2rem !important;
+  }
+
+  .pirate-subtitle {
+    font-size: 1rem;
+  }
+
+  .swish-button {
+    width: 270px;
+    max-width: 85%;
+    font-size: 1.1rem !important;
+    padding: 0 1.5rem !important;
+  }
+
+  .decoration {
+    font-size: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .treasure-chest {
+    padding: 1.5rem 1rem;
+    margin: 0.5rem;
+  }
+
+  .pirate-title {
+    font-size: 1.5rem !important;
+  }
+
+  .swish-button {
+    width: 245px;
+    max-width: 100%;
+    font-size: 1rem !important;
+    height: 50px !important;
+    letter-spacing: 0.5px;
+    padding: 0 1rem !important;
+  }
+
+  .swish-icon-left,
+  .swish-icon-right {
+    font-size: 1em;
+    margin-left: 4px;
+    margin-right: 4px;
+  }
+
+  .decoration {
+    font-size: 1.2rem;
+  }
+}
+
+@media (max-width: 320px) {
+  .swish-button {
+    width: 180px;
+    max-width: 75%;
+    font-size: 0.9rem !important;
+    padding: 0 0.75rem !important;
+  }
+
+  .swish-icon-left,
+  .swish-icon-right {
+    font-size: 0.9em;
+    margin-left: 3px;
+    margin-right: 3px;
+  }
+}
+
+/* Loading state animation */
+.swish-button.ant-btn-loading {
+  background: linear-gradient(135deg, #a0a0a0 0%, #808080 50%, #606060 100%) !important;
+}
+
+/* Custom notification styles for pirate theme */
+.ant-notification-notice {
+  border-radius: 10px !important;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2) !important;
+}
