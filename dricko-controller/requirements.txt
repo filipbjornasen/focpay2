@@ -1,0 +1,4 @@
+requests
+simplejson
+gpiozero
+python-dotenv

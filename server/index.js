@@ -17,6 +17,7 @@ console.log("Using certificate directory:", certDir);
 
 app.use(cors());
 app.use(express.json());
+const AUTH_TOKEN = process.env.FOC_PAY_AUTH_TOKEN
 
 const SWISH_CONFIG = {
   baseUrl: process.env.SWISH_BASE_URL,
@@ -121,11 +122,9 @@ app.post("/api/swish-dricko", async (req, res) => {
 
       // Store payment request in Azure Table Storage
       const paymentRequest = await paymentDb.createPayment(paymentData);
-      console.log(swishResponse);
       // Return standardized response
       const userCallbackUrl =  SWISH_CONFIG.userCallbackUrl + '?token=' + paymentRequest.id;
       const redirectUrl = `swish://paymentrequest?token=${paymentRequest.token}&callbackurl=${encodeURIComponent(userCallbackUrl)}`;
-      console.log(redirectUrl)
       const responseData = {
         token: paymentRequest.token,
         callbackUrl: userCallbackUrl,
@@ -199,6 +198,12 @@ app.post("/api/swish/callback", async (req, res) => {
 
 // Get oldest paid payment
 app.get("/api/payments/oldest-paid", async (req, res) => {
+  const authHeader = req.headers['authorization'];
+  console.log( `Bearer ${AUTH_TOKEN}`)
+  if (!authHeader || authHeader !== `Bearer ${AUTH_TOKEN}`) {
+    return sendErrorResponse(res, 401, "Unauthorized", "Invalid or missing authorization token");
+  }
+
   try {
     const oldestPaidPayment = await paymentDb.getOldestPaidPayment();
 
@@ -230,6 +235,10 @@ app.get("/api/payments/oldest-paid", async (req, res) => {
 
 // Change payment status to credited
 app.patch("/api/payments/:paymentId/credit", async (req, res) => {
+  const authHeader = req.headers['authorization'];
+  if (!authHeader || authHeader !== `Bearer ${process.env.FOC_PAY_AUTH_TOKEN}`) {
+    return sendErrorResponse(res, 401, "Unauthorized", "Invalid or missing authorization token");
+  }
   try {
     const { paymentId } = req.params;
 
@@ -276,6 +285,11 @@ app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
 
+
+app.use(function(req, res, next) {
+  console.log(`${req.method} ${req.url}`);
+  next();
+});
 
 app.use(express.static(path.join(__dirname, "build")));
 
