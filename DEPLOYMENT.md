@@ -3,7 +3,7 @@ cd client
 npm install
 npm run build
 cd ..
-rmdir deploy
+rmdir /q /s deploy
 mkdir deploy
 del deploy.zip
 cd server

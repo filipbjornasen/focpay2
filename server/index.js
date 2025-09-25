@@ -199,7 +199,6 @@ app.post("/api/swish/callback", async (req, res) => {
 // Get oldest paid payment
 app.get("/api/payments/oldest-paid", async (req, res) => {
   const authHeader = req.headers['authorization'];
-  console.log( `Bearer ${AUTH_TOKEN}`)
   if (!authHeader || authHeader !== `Bearer ${AUTH_TOKEN}`) {
     return sendErrorResponse(res, 401, "Unauthorized", "Invalid or missing authorization token");
   }
