@@ -143,9 +143,6 @@ class PaymentDatabase {
     }
 }
 
-const paymentDb = new PaymentDatabase();
-
 module.exports = {
-    PaymentDatabase,
-    paymentDb
+    PaymentDatabase
 };

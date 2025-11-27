@@ -10,9 +10,10 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@azure/data-tables": "^13.2.2",
     "axios": "^1.12.2",
     "cors": "^2.8.5",
-    "express": "^4.21.2",
-    "@azure/data-tables": "^13.2.2"
+    "dotenv": "^17.2.3",
+    "express": "^4.21.2"
   }
 }

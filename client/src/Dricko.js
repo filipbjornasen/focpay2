@@ -60,6 +60,12 @@ function Dricko() {
               Ahoy matey! Ready to pay like a true pirate?
             </Text>
 
+            <Text className="price-text" style={{ display: 'block', marginTop: 0, marginBottom: 0, fontSize: '1.2rem', fontWeight: '500' }}>
+              <span style={{ marginRight: 8 }}>🪙</span>
+              12 kr
+              <span style={{ marginLeft: 8 }}>🪙</span>
+            </Text>
+
             <div className="payment-section">
               <Button
                 type="primary"

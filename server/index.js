@@ -5,20 +5,19 @@ const crypto = require("crypto");
 const fs = require("fs");
 const https = require("https");
 const axios = require("axios");
-const { paymentDb } = require("./database");
-
+const { PaymentDatabase } = require("./database");
+require("dotenv").config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 const ENV = (process.env.NODE_ENV || "development").toLowerCase();
 const certDir = path.join(__dirname, "certs", ENV === "production" ? "prod" : "test");
-
 console.log("Using environment:", ENV);
 console.log("Using certificate directory:", certDir);
 
 app.use(cors());
 app.use(express.json());
 const AUTH_TOKEN = process.env.FOC_PAY_AUTH_TOKEN
-
+const paymentDb = new PaymentDatabase();
 const SWISH_CONFIG = {
   baseUrl: process.env.SWISH_BASE_URL,
   certPath: certDir + '/swish.pem',
@@ -88,7 +87,7 @@ async function createSwishPaymentRequest() {
   const data = {
     callbackUrl: SWISH_CONFIG.callbackUrl,
     payeeAlias: SWISH_CONFIG.alias,
-    amount: '10',
+    amount: '12',
     currency: 'SEK',
     message: 'GET HIPPER WITH FLIPPER!',
     callbackIdentifier: instructionId
@@ -130,7 +129,7 @@ app.post("/api/swish-dricko", async (req, res) => {
         callbackUrl: userCallbackUrl,
         redirectUrl: redirectUrl,
         payeeAlias: SWISH_CONFIG.alias,
-        amount: 10,
+        amount: 12,
         currency: "SEK",
         message: 'GET HIPPER WITH FLIPPER!',
         status: 'CREATED',
