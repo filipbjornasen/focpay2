@@ -84,6 +84,9 @@ TABLE_STORAGE_CONNECTION_STRING="your-azure-connection-string"
 SWISH_PASSPHRASE="swish"                    # Certificate passphrase
 SWISH_ALIAS="1234679304"                    # Merchant alias
 SWISH_ENV="test"                            # test|production
+
+# Payment Configuration
+UNIT_PRICE="12"                             # Price per unit in SEK (defaults to 12)
 ```
 
 ### Certificate Setup

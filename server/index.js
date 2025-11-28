@@ -17,6 +17,7 @@ console.log("Using certificate directory:", certDir);
 app.use(cors());
 app.use(express.json());
 const AUTH_TOKEN = process.env.FOC_PAY_AUTH_TOKEN
+const UNIT_PRICE = process.env.UNIT_PRICE || '12';
 const paymentDb = new PaymentDatabase();
 const SWISH_CONFIG = {
   baseUrl: process.env.SWISH_BASE_URL,
@@ -87,7 +88,7 @@ async function createSwishPaymentRequest() {
   const data = {
     callbackUrl: SWISH_CONFIG.callbackUrl,
     payeeAlias: SWISH_CONFIG.alias,
-    amount: '12',
+    amount: UNIT_PRICE,
     currency: 'SEK',
     message: 'GET HIPPER WITH FLIPPER!',
     callbackIdentifier: instructionId
@@ -112,7 +113,7 @@ app.post("/api/swish-dricko", async (req, res) => {
       const paymentData = {
         id: swishResponse.id,
         token: swishResponse.token,
-        amount: 10,
+        amount: UNIT_PRICE,
         currency: 'SEK',
         message: 'GET HIPPER WITH FLIPPER!',
         payeeAlias: SWISH_CONFIG.alias,
@@ -129,7 +130,7 @@ app.post("/api/swish-dricko", async (req, res) => {
         callbackUrl: userCallbackUrl,
         redirectUrl: redirectUrl,
         payeeAlias: SWISH_CONFIG.alias,
-        amount: 12,
+        amount: UNIT_PRICE,
         currency: "SEK",
         message: 'GET HIPPER WITH FLIPPER!',
         status: 'CREATED',
