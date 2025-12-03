@@ -57,49 +57,52 @@ class Dricko():
         time.sleep(10)
         while True:
             try:
-                logger.debug("Checking for payments to credit...")
-                rsp = self.api_get("payments/oldest-paid/")
-                if rsp.status_code == 200:
-                    if rsp.text:
-                        try:
-                            logger.debug("Got a payment to credit!")
-                            rsp = rsp.json()
-                            payment = rsp['payment']
-                            self.log_cooldown = 0
-                        except simplejson.JSONDecodeError as e:
-                            logger.warning(f'warning json: {e}')
-            except socket.gaierror as e:
-                logger.warning(f"warning gai {e}")
-
-            if payment != None:
-                if environment == "production":
-                    relay.on()
-                    sleep(0.5)
-                    relay.off()
-
                 try:
-                    while True:
-                        logger.debug(f"Crediting payment {payment['id']}...")
-                        rsp = self.api_patch(f"payments/{payment['id']}/credit").json()
-                        logger.debug(f"Credit response: {rsp}")
-                        if rsp['payment']["status"] == "CREDITED":
-                            logger.info(f"{payment['id']} was successfully credited!")
-                            break
-                        else:
-                            logger.info(f"{payment['id']} could not be credited...")
-                            logger.info("trying again...")
-                            time.sleep(3)
-
-                    payment = None
+                    logger.debug("Checking for payments to credit...")
+                    rsp = self.api_get("payments/oldest-paid/")
+                    if rsp.status_code == 200:
+                        if rsp.text:
+                            try:
+                                logger.debug("Got a payment to credit!")
+                                rsp = rsp.json()
+                                payment = rsp['payment']
+                                self.log_cooldown = 0
+                            except simplejson.JSONDecodeError as e:
+                                logger.warning(f'warning json: {e}')
                 except socket.gaierror as e:
-                    logger.warning(f'warning {e}')
+                    logger.warning(f"warning gai {e}")
 
-            else:
-                self.log_cooldown -= 1
-                if self.log_cooldown <= 0:
-                    logger.info("dricko: no payments to credit...")
-                    self.log_cooldown = 20
+                if payment != None:
+                    if environment == "production":
+                        relay.on()
+                        sleep(0.5)
+                        relay.off()
 
+                    try:
+                        while True:
+                            logger.debug(f"Crediting payment {payment['id']}...")
+                            rsp = self.api_patch(f"payments/{payment['id']}/credit").json()
+                            logger.debug(f"Credit response: {rsp}")
+                            if rsp['payment']["status"] == "CREDITED":
+                                logger.info(f"{payment['id']} was successfully credited!")
+                                break
+                            else:
+                                logger.info(f"{payment['id']} could not be credited...")
+                                logger.info("trying again...")
+                                time.sleep(3)
+
+                        payment = None
+                    except socket.gaierror as e:
+                        logger.warning(f'warning {e}')
+
+                else:
+                    self.log_cooldown -= 1
+                    if self.log_cooldown <= 0:
+                        logger.info("dricko: no payments to credit...")
+                        self.log_cooldown = 20
+            except Exception as e:
+                logger.error(f"dricko: unhandled exception: {e}")
+                time.sleep(10)
             # don't hit the API too often
             time.sleep(7)
 
