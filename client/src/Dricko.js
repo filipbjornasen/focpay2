@@ -49,18 +49,20 @@ function Dricko() {
         }
 
         notification.success({
-          message: 'Arrr!',
-          description: 'Sailing to Swish waters! Complete your payment there, matey!',
+          message: '⚔️ Quest Initiated!',
+          description: 'The mystical portal to Swish realms awaits thee! Complete thy sacred transaction to claim thy bounty.',
           placement: 'topRight',
+          duration: 5,
         });
       } else {
         throw new Error('Payment failed');
       }
     } catch (error) {
       notification.error({
-        message: 'Shiver me timbers!',
-        description: 'Something went wrong with the payment. Try again, matey!',
+        message: '🛡️ Quest Interrupted!',
+        description: 'Dark forces have disrupted the payment enchantment. Muster thy courage and attempt the ritual once more!',
         placement: 'topRight',
+        duration: 6,
       });
     } finally {
       setLoading(false);
@@ -73,16 +75,19 @@ function Dricko() {
         <div className="pirate-container">
           <div className="treasure-chest">
             <Title level={1} className="pirate-title">
-              🏴‍☠️ Welcome to Dricko's Treasure
+              🏴‍☠️ Dricko's 🏴‍☠️
+              <br />
+              <span className="title-subtitle">Legendary Vault</span>
             </Title>
             <Text className="pirate-subtitle">
-              Ahoy matey! Ready to pay like a true pirate?
+              Brave adventurer, ye have discovered the fabled treasure hoard!
+              Complete thy quest with a tribute of gold...
             </Text>
 
-            <Text className="price-text" style={{ display: 'block', marginTop: 0, marginBottom: 0, fontSize: '1.2rem', fontWeight: '500' }}>
-              <span style={{ marginRight: 8 }}>🪙</span>
-              {price} kr
-              <span style={{ marginLeft: 8 }}>🪙</span>
+            <Text className="price-text">
+              <span style={{ marginRight: 12, marginLeft: 8 }}>🪙</span>
+              {price} Crowns
+              <span style={{ marginLeft: 12, marginRight: 8 }}>🪙</span>
             </Text>
 
             <div className="payment-section">
@@ -93,17 +98,22 @@ function Dricko() {
                 onClick={handleSwishPayment}
                 className="swish-button"
               >
-                <span className="swish-icon-left">💰</span>
-                Betala med swish
-                <span className="swish-icon-right">💰</span>
+                <span className="button-content">
+                  <span className="button-main">
+                    <span className="swish-icon-left">⚔️</span>
+                    Claim Thy Bounty
+                    <span className="swish-icon-right">⚔️</span>
+                  </span>
+                  <span className="button-subtext">with swish</span>
+                </span>
               </Button>
             </div>
 
             <div className="pirate-decorations">
-              <span className="decoration">⚓</span>
-              <span className="decoration">🗡️</span>
-              <span className="decoration">💎</span>
-              <span className="decoration">🦜</span>
+              <span className="decoration" title="Anchor of the Seven Seas">⚓</span>
+              <span className="decoration" title="Cutlass of the Forgotten">🗡️</span>
+              <span className="decoration" title="Jewel of the Deep">💎</span>
+              <span className="decoration" title="Phoenix Companion">🦜</span>
             </div>
           </div>
         </div>
