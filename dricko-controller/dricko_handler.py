@@ -52,6 +52,24 @@ class Dricko():
         url = self.base_url + endpoint
         return requests.patch(url, headers=self.headers)
 
+    def log_system_diagnostics(self):
+        """Log CPU, memory, and connection statistics"""
+        try:
+            cpu_percent = psutil.cpu_percent(interval=0.1)
+            memory = psutil.virtual_memory()
+            connections = len(psutil.net_connections())
+            process = psutil.Process()
+            process_memory = process.memory_info()
+            
+            logger.info(
+                f"System diagnostics - CPU: {cpu_percent}% | "
+                f"Memory: {memory.percent}% ({memory.used / (1024**3):.2f}GB / {memory.total / (1024**3):.2f}GB) | "
+                f"Connections: {connections} | "
+                f"Process Memory: {process_memory.rss / (1024**2):.2f}MB"
+            )
+        except Exception as e:
+            logger.warning(f"Error logging system diagnostics: {e}")
+
     def run(self):
         logger.info("Starting dricko handler...")
         payment = None
@@ -65,9 +83,8 @@ class Dricko():
                 try:
                     logger.debug("Checking for payments to credit...")
                     time_since_usage_log += 1
-                    if time_since_usage_log >= 10:
-                        usage = psutil.virtual_memory()
-                        logger.info(f"Memory usage: {usage.percent}%")
+                    if time_since_usage_log >= 60:
+                        self.log_system_diagnostics()
                         time_since_usage_log = 0
 
                     rsp = self.api_get("payments/oldest-paid/")
