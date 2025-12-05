@@ -6,9 +6,13 @@ import os
 import time
 from time import sleep
 from gpiozero import OutputDevice
+from gpiozero.pins.mock import MockFactory
 import logging
 from dotenv import load_dotenv
 import sys
+import psutil
+
+#OutputDevice.pin_factory = MockFactory() # Uncomment this line to use mock GPIO pins for testing
 
 load_dotenv()
 
@@ -55,10 +59,17 @@ class Dricko():
         relay = OutputDevice(25)
 
         time.sleep(10)
+        time_since_usage_log = 10
         while True:
             try:
                 try:
                     logger.debug("Checking for payments to credit...")
+                    time_since_usage_log += 1
+                    if time_since_usage_log >= 10:
+                        usage = psutil.virtual_memory()
+                        logger.info(f"Memory usage: {usage.percent}%")
+                        time_since_usage_log = 0
+
                     rsp = self.api_get("payments/oldest-paid/")
                     if rsp.status_code == 200:
                         if rsp.text:

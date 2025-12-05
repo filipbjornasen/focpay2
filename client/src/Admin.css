@@ -1,0 +1,66 @@
+.admin-layout {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.admin-content {
+  padding: 24px;
+  min-height: 100vh;
+}
+
+.login-card {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+}
+
+.admin-content .ant-card {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+}
+
+.admin-content .ant-table {
+  background: white;
+}
+
+.admin-content .ant-tabs-nav {
+  background: white;
+  padding: 8px 16px;
+  border-radius: 8px 8px 0 0;
+  margin-bottom: 0 !important;
+}
+
+.admin-content .ant-tabs-tab {
+  font-size: 16px;
+  font-weight: 500;
+  padding: 8px 16px;
+  margin: 0 8px;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+}
+
+.admin-content .ant-tabs-tab:hover {
+  background: #f0f0f0;
+}
+
+.admin-content .ant-tabs-tab-active {
+  background: #1890ff !important;
+  box-shadow: 0 2px 8px rgba(24, 144, 255, 0.3);
+}
+
+.admin-content .ant-tabs-tab-active .ant-tabs-tab-btn {
+  color: white !important;
+}
+
+.admin-content .ant-tabs-tab-active .ant-tabs-tab-btn span {
+  color: white !important;
+}
+
+.admin-content .ant-tabs-ink-bar {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .admin-content {
+    padding: 12px;
+  }
+}

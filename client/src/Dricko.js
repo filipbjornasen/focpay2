@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button, Layout, Typography, notification } from 'antd';
 import './Dricko.css';
 
@@ -7,6 +7,25 @@ const { Title, Text } = Typography;
 
 function Dricko() {
   const [loading, setLoading] = useState(false);
+  const [price, setPrice] = useState('12'); // Default fallback price
+
+  // Fetch current price when component mounts
+  useEffect(() => {
+    const fetchPrice = async () => {
+      try {
+        const response = await fetch('/api/settings/unit-price');
+        if (response.ok) {
+          const data = await response.json();
+          setPrice(data.unitPrice);
+        }
+      } catch (error) {
+        console.error('Failed to fetch price:', error);
+        // Keep default price on error
+      }
+    };
+
+    fetchPrice();
+  }, []);
 
   const handleSwishPayment = async () => {
     setLoading(true);
@@ -62,7 +81,7 @@ function Dricko() {
 
             <Text className="price-text" style={{ display: 'block', marginTop: 0, marginBottom: 0, fontSize: '1.2rem', fontWeight: '500' }}>
               <span style={{ marginRight: 8 }}>🪙</span>
-              12 kr
+              {price} kr
               <span style={{ marginLeft: 8 }}>🪙</span>
             </Text>
 

@@ -17,7 +17,11 @@ console.log("Using certificate directory:", certDir);
 app.use(cors());
 app.use(express.json());
 const AUTH_TOKEN = process.env.FOC_PAY_AUTH_TOKEN
-const UNIT_PRICE = process.env.UNIT_PRICE || '12';
+let UNIT_PRICE = process.env.UNIT_PRICE || '12';
+
+// Admin credentials (hardcoded as per requirements)
+const ADMIN_USERNAME = 'admin';
+const ADMIN_PASSWORD = 'admin123';
 const paymentDb = new PaymentDatabase();
 const SWISH_CONFIG = {
   baseUrl: process.env.SWISH_BASE_URL,
@@ -276,6 +280,133 @@ app.patch("/api/payments/:paymentId/credit", async (req, res) => {
     });
   } catch (error) {
     console.error("Error crediting payment:", error);
+    return sendErrorResponse(res, 500, "Internal server error", error.message);
+  }
+});
+
+// Public endpoint to get current unit price (no auth required)
+app.get("/api/settings/unit-price", (req, res) => {
+  res.status(200).json({
+    unitPrice: UNIT_PRICE
+  });
+});
+
+// ==================== ADMIN ENDPOINTS ====================
+
+// Simple admin auth middleware
+function checkAdminAuth(req, res, next) {
+  const authHeader = req.headers['authorization'];
+  if (!authHeader || !authHeader.startsWith('Basic ')) {
+    return sendErrorResponse(res, 401, "Unauthorized", "Missing or invalid authorization");
+  }
+
+  const base64Credentials = authHeader.split(' ')[1];
+  const credentials = Buffer.from(base64Credentials, 'base64').toString('utf-8');
+  const [username, password] = credentials.split(':');
+
+  if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
+    next();
+  } else {
+    return sendErrorResponse(res, 401, "Unauthorized", "Invalid credentials");
+  }
+}
+
+// Admin login endpoint
+app.post("/api/admin/login", (req, res) => {
+  const { username, password } = req.body;
+
+  if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
+    res.status(200).json({
+      success: true,
+      message: "Login successful",
+      token: Buffer.from(`${username}:${password}`).toString('base64')
+    });
+  } else {
+    return sendErrorResponse(res, 401, "Unauthorized", "Invalid username or password");
+  }
+});
+
+// Get current unit price
+app.get("/api/admin/settings/unit-price", checkAdminAuth, (req, res) => {
+  res.status(200).json({
+    unitPrice: UNIT_PRICE
+  });
+});
+
+// Update unit price
+app.put("/api/admin/settings/unit-price", checkAdminAuth, (req, res) => {
+  const { unitPrice } = req.body;
+
+  if (!unitPrice || isNaN(unitPrice) || parseFloat(unitPrice) <= 0) {
+    return sendErrorResponse(res, 400, "Bad request", "Valid unit price is required");
+  }
+
+  UNIT_PRICE = unitPrice.toString();
+
+  console.log(`Unit price updated to: ${UNIT_PRICE}`);
+
+  res.status(200).json({
+    success: true,
+    message: "Unit price updated successfully",
+    unitPrice: UNIT_PRICE
+  });
+});
+
+// Get all payments
+app.get("/api/admin/payments", checkAdminAuth, async (req, res) => {
+  try {
+    const payments = await paymentDb.getAllPayments();
+
+    // Sort by dateCreated descending (newest first)
+    payments.sort((a, b) => new Date(b.dateCreated) - new Date(a.dateCreated));
+
+    res.status(200).json({
+      payments: payments,
+      count: payments.length,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error("Error getting all payments:", error);
+    return sendErrorResponse(res, 500, "Internal server error", error.message);
+  }
+});
+
+// Update payment status
+app.patch("/api/admin/payments/:id/status", checkAdminAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    if (!id) {
+      return sendErrorResponse(res, 400, "Bad request", "Payment ID is required");
+    }
+
+    if (!status) {
+      return sendErrorResponse(res, 400, "Bad request", "Status is required");
+    }
+
+    const validStatuses = ["CREATED", "PAID", "DECLINED", "ERROR", "CANCELLED", "CREDITED"];
+    if (!validStatuses.includes(status)) {
+      return sendErrorResponse(res, 400, "Bad request", `Invalid status. Valid statuses are: ${validStatuses.join(", ")}`);
+    }
+
+    const existingPayment = await paymentDb.getPayment(id);
+
+    if (!existingPayment) {
+      return sendErrorResponse(res, 404, "Payment not found", `Payment with ID ${id} does not exist`);
+    }
+
+    const updatedPayment = await paymentDb.updatePaymentStatus(id, status);
+
+    console.log(`Admin updated payment ${id} status from ${existingPayment.status} to ${status}`);
+
+    res.status(200).json({
+      success: true,
+      message: "Payment status updated successfully",
+      payment: updatedPayment
+    });
+  } catch (error) {
+    console.error("Error updating payment status:", error);
     return sendErrorResponse(res, 500, "Internal server error", error.message);
   }
 });
