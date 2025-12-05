@@ -255,7 +255,18 @@
   font-family: 'IM Fell English', serif;
 }
 
-/* Treasure chest decorations removed */
+/* Fleur-de-lis decoration at top center */
+.treasure-chest::before {
+  content: '⚜️';
+  position: absolute;
+  top: -40px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 3rem;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.4))
+          drop-shadow(0 0 15px rgba(212, 175, 55, 0.6));
+  z-index: 10;
+}
 
 /* Engraved medieval title with embellishments */
 .pirate-title {

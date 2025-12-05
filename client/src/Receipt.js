@@ -15,16 +15,21 @@ function Receipt() {
               <img src="/favicon.png" alt="Foc Logo" className="logo-image" />
             </div>
             <Title level={1} className="receipt-title">
-              Argh Pirate!
+              Quest<br />
+              <span style={{ fontSize: '1.6rem', letterSpacing: '1.5px' }}>Complete!</span>
             </Title>
             <Text className="receipt-message">
-              Take your mighty treasure and sail forth with joy!
+              Hail, brave champion of the Seven Seas! Thy legendary quest hath been
+              fulfilled with valor and honor. The ancient treasures are now thine,
+              thy bounty secured in the annals of maritime glory. May fair winds
+              guide thy vessel to distant shores, and may fortune's golden smile
+              forever light thy path across the boundless azure expanse!
             </Text>
             <div className="pirate-decorations">
-              <span className="decoration">⚓</span>
-              <span className="decoration">🗡️</span>
-              <span className="decoration">💎</span>
-              <span className="decoration">🦜</span>
+              <span className="decoration" title="Anchor of the Seven Seas">⚓</span>
+              <span className="decoration" title="Cutlass of the Forgotten">🗡️</span>
+              <span className="decoration" title="Jewel of the Deep">💎</span>
+              <span className="decoration" title="Phoenix Companion">🦜</span>
             </div>
           </div>
         </div>
