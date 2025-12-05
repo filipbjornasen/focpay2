@@ -255,40 +255,7 @@
   font-family: 'IM Fell English', serif;
 }
 
-/* Remove treasure chest decoration - not needed */
-
-/* Decorative corner ornaments */
-.treasure-chest::before {
-  content: '⚓';
-  position: absolute;
-  top: -15px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 2rem;
-  color: #8b6914;
-  text-shadow:
-    0 0 10px rgba(139, 105, 20, 0.6),
-    1px 1px 3px rgba(0, 0, 0, 0.5),
-    -1px -1px 0px rgba(212, 175, 55, 0.4);
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
-  z-index: 10;
-  animation: anchorGlow 3s ease-in-out infinite;
-}
-
-@keyframes anchorGlow {
-  0%, 100% {
-    text-shadow:
-      0 0 10px rgba(139, 105, 20, 0.6),
-      1px 1px 3px rgba(0, 0, 0, 0.5),
-      -1px -1px 0px rgba(212, 175, 55, 0.4);
-  }
-  50% {
-    text-shadow:
-      0 0 15px rgba(139, 105, 20, 0.9),
-      1px 1px 3px rgba(0, 0, 0, 0.5),
-      -1px -1px 0px rgba(212, 175, 55, 0.6);
-  }
-}
+/* Treasure chest decorations removed */
 
 /* Engraved medieval title with embellishments */
 .pirate-title {
